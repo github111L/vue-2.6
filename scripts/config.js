@@ -27,8 +27,11 @@ const weexFactoryPlugin = {
 
 const aliases = require('./alias')
 const resolve = p => {
+  // 取出'/'前面的路径名
   const base = p.split('/')[0]
+  // aliases[base]会返回根目录下base这个文件的绝对路径
   if (aliases[base]) {
+    // 拼接上{{base}}/ 之后的路径名，形成入口文件的绝对路径
     return path.resolve(aliases[base], p.slice(base.length + 1))
   } else {
     return path.resolve(__dirname, '../', p)
@@ -38,6 +41,7 @@ const resolve = p => {
 const builds = {
   // Runtime only (CommonJS). Used by bundlers e.g. Webpack & Browserify
   'web-runtime-cjs-dev': {
+    // resolve函数，把传入的相对路径转换为绝对路径
     entry: resolve('web/entry-runtime.js'),
     dest: resolve('dist/vue.runtime.common.dev.js'),
     format: 'cjs',
@@ -121,11 +125,16 @@ const builds = {
   },
   // Runtime+compiler development build (Browser)
   'web-full-dev': {
+    // 入口
     entry: resolve('web/entry-runtime-with-compiler.js'),
+    // 出口
     dest: resolve('dist/vue.js'),
+    // 模块化方式，这里是UMD
     format: 'umd',
+    // 打包方式
     env: 'development',
     alias: { he: './entity-decoder' },
+    // 打包之后的文件的文件头
     banner
   },
   // Runtime+compiler production build  (Browser)
@@ -214,6 +223,7 @@ const builds = {
 }
 
 function genConfig (name) {
+  // 一个包含入口文件、出口文件路径、格式化方式、打包后生成的文件头 等信息的对象
   const opts = builds[name]
   const config = {
     input: opts.entry,
@@ -262,8 +272,10 @@ function genConfig (name) {
 
   return config
 }
-
+// 是否设置了target 变量
+// 执行npm run dev 时，设置了这个target变量
 if (process.env.TARGET) {
+  // 生成配置对象
   module.exports = genConfig(process.env.TARGET)
 } else {
   exports.getBuild = genConfig

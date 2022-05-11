@@ -1,5 +1,6 @@
 /* @flow */
-
+// 使用flow静态语法检查
+// vscode报错，泛型的语法只能在ts中使用，设置json文件中js代码检查为false即可
 import config from '../config'
 import { initUse } from './use'
 import { initMixin } from './mixin'
@@ -46,6 +47,8 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   Vue.nextTick = nextTick
 
   // 2.6 explicit observable API
+  // 用flow中的泛型，后面代码不能高亮显示，解决方法：安装vscode的babel-javascript 插件
+  // 但会丢失“跳转到定义部分”的功能
   Vue.observable = <T>(obj: T): T => {
     observe(obj)
     return obj
