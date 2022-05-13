@@ -6,6 +6,13 @@ import { makeMap } from 'shared/util'
 // during template compilation
 export const isReservedAttr = makeMap('style,class')
 
+
+/**
+ * makeMap 创建一个map并返回一个函数，用来检查传入的key是否在map中
+ * Make a map and return a function for checking if a key
+ * is in that map.
+ */
+
 // attributes that should be using props for binding
 const acceptValue = makeMap('input,textarea,option,select,progress')
 export const mustUseProp = (tag: string, type: ?string, attr: string): boolean => {

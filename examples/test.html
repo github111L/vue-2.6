@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtime-Complier</title>
+</head>
+<body>
+    <div id="app">Hello world</div>
+    <script src="../../dist/vue.js"></script>
+    <script>
+        const vm = new Vue({
+            el : '#app',
+            template:'<h1>suibian</h1>',
+            // 这里可以直接写函数的定义
+            render(h){
+                return h('h2','hello render')
+            }
+        })
+    </script>
+</body>
+</html>

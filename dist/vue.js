@@ -5705,14 +5705,18 @@
   function query (el) {
     if (typeof el === 'string') {
       var selected = document.querySelector(el);
+      // 若没有找到已经存在的dom元素
       if (!selected) {
+        // 如果当前不在生产环境，就在浏览器控制台打印：不能找到以el为选择器的dom元素
          warn(
           'Cannot find element: ' + el
         );
+        // 返回以el为选择器的dom元素—— div
         return document.createElement('div')
       }
       return selected
     } else {
+      // 若el是dom元素，则直接返回el
       return el
     }
   }
@@ -11934,24 +11938,30 @@
     var el = query(id);
     return el && el.innerHTML
   });
-
+  // 保留vue实例的$mount方法
   var mount = Vue.prototype.$mount;
+  // 把用户设置的dom挂载到页面上
   Vue.prototype.$mount = function (
+    // 创建vue实例时创建的选项
     el,
     hydrating
   ) {
+    // 此时的el是个dom元素
     el = el && query(el);
 
     /* istanbul ignore if */
     if (el === document.body || el === document.documentElement) {
+      // 如果el是body或html元素，则输出错误信息：不能把vue挂载到html或body元素上
        warn(
         "Do not mount Vue to <html> or <body> - mount to normal elements instead."
       );
+      // 返回当前vue实例
       return this
     }
 
     var options = this.$options;
     // resolve template/el and convert to render function
+    // 若没有传render函数，则将template模板转化为render函数
     if (!options.render) {
       var template = options.template;
       if (template) {
@@ -12002,6 +12012,7 @@
         }
       }
     }
+    // 调用mount方法，渲染dom mount = Vue.prototype.$mount
     return mount.call(this, el, hydrating)
   };
 
