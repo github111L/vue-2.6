@@ -14,10 +14,13 @@ export function initExtend (Vue: GlobalAPI) {
   let cid = 1
 
   /**
-   * Class inheritance
+   * Class inheritance 
+   * Vue.extend.返回组件的构造函数
    */
   Vue.extend = function (extendOptions: Object): Function {
+    // 传入的参数默认为空对象
     extendOptions = extendOptions || {}
+    // Super就是Vue
     const Super = this
     const SuperId = Super.cid
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
@@ -30,9 +33,12 @@ export function initExtend (Vue: GlobalAPI) {
       validateComponentName(name)
     }
 
+    // 创建了一个构造函数VueComponent
     const Sub = function VueComponent (options) {
+      // 初始化
       this._init(options)
     }
+    // 将对象的原型改变为Super.prototype，让vue的所有组价继承自Vue
     Sub.prototype = Object.create(Super.prototype)
     Sub.prototype.constructor = Sub
     Sub.cid = cid++

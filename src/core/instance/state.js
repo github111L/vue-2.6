@@ -43,6 +43,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.set = function proxySetter (val) {
     this[sourceKey][key] = val
   }
+  // target，可以是vue实例。将key注入vue实例中
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
@@ -51,9 +52,11 @@ export function initState (vm: Component) {
   const opts = vm.$options
   if (opts.props) initProps(vm, opts.props)
   if (opts.methods) initMethods(vm, opts.methods)
+  // 若存在data，则初始化
   if (opts.data) {
     initData(vm)
   } else {
+    // 否则，将_data属性设置为空对象，并设置对象为响应式的数据
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
@@ -64,6 +67,7 @@ export function initState (vm: Component) {
 
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
+  // 存储PropsOptions(vm选项中的props；用户传入的props)
   const props = vm._props = {}
   // cache prop keys so that future props updates can iterate using Array
   // instead of dynamic object key enumeration.
@@ -98,23 +102,25 @@ function initProps (vm: Component, propsOptions: Object) {
         }
       })
     } else {
+      // 通过这个函数，将props中的属性转换为get和set方法，注入到_props中
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
     if (!(key in vm)) {
+      // 把不在vm中的属性注入到vue实例中
       proxy(vm, `_props`, key)
     }
   }
   toggleObserving(true)
 }
-
+// 把data中的属性注入vue实例，并将之转换为响应式数据
 function initData (vm: Component) {
   let data = vm.$options.data
   data = vm._data = typeof data === 'function'
-    ? getData(data, vm)
-    : data || {}
+    ? getData(data, vm) // 组件中的data是一个函数
+    : data || {} // vue实例中的data是一个对象
   if (!isPlainObject(data)) {
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
@@ -123,8 +129,8 @@ function initData (vm: Component) {
       vm
     )
   }
-  // proxy data on instance
-  const keys = Object.keys(data)
+  // proxy data on instance 获取data中的所有属性，判断是否和props，methods中的属性重名
+  const keys = Object.keys(data) 
   const props = vm.$options.props
   const methods = vm.$options.methods
   let i = keys.length
@@ -156,6 +162,7 @@ export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
   pushTarget()
   try {
+    // 把data当函数来处理。处理用户传入的data函数
     return data.call(vm, vm)
   } catch (e) {
     handleError(e, vm, `data()`)
@@ -266,6 +273,7 @@ function initMethods (vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
     if (process.env.NODE_ENV !== 'production') {
+      // 若用户定义的methods不是函数，报错
       if (typeof methods[key] !== 'function') {
         warn(
           `Method "${key}" has type "${typeof methods[key]}" in the component definition. ` +
@@ -273,12 +281,15 @@ function initMethods (vm: Component, methods: Object) {
           vm
         )
       }
+      // 若methods的key在props中也存在，则不能将之注册为方法
       if (props && hasOwn(props, key)) {
         warn(
           `Method "${key}" has already been defined as a prop.`,
           vm
         )
       }
+      // 用户定义的方法和已经存在的Vue实例方法冲突了
+      // isReserved 判断key是不是以$或_开头，若是，则认为这是私有属性，不允许作为方法名
       if ((key in vm) && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +
@@ -286,6 +297,8 @@ function initMethods (vm: Component, methods: Object) {
         )
       }
     }
+    // 若该成员不是function，返回一个空函数，否则将之绑定到vm上
+    // bind 改变函数中的this指向。把当前函数内部的this改成vm实例
     vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm)
   }
 }

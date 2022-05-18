@@ -20,10 +20,11 @@ import {
 } from '../util/index'
 
 export function initGlobalAPI (Vue: GlobalAPI) {
-  // config
+  // config 对象的描述符
   const configDef = {}
   configDef.get = () => config
   if (process.env.NODE_ENV !== 'production') {
+    // 给config对象重新赋值，会触发set方法
     configDef.set = () => {
       warn(
         'Do not replace the Vue.config object, set individual fields instead.'
@@ -44,7 +45,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     defineReactive
   }
 
-  // 全局方法set、delete、nextTick
+  // 全局方法set、delete、nextTick  响应式相关
   // 静态方法，直接挂载到Vue的构造函数上
   Vue.set = set
   Vue.delete = del
@@ -54,7 +55,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // 用flow中的泛型，后面代码不能高亮显示，解决方法：安装vscode的babel-javascript 插件
   // 但会丢失“跳转到定义部分”的功能
 
-  // observable 让一个对象编程可响应的
+  // observable 让一个对象编程可响应的  响应式相关
   Vue.observable = <T>(obj: T): T => {
     observe(obj)
     return obj
@@ -66,6 +67,8 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   */
 
   // 初始化Vue.options对象，并为其扩展components，directives，filters成员
+  // 存储全局的组件、指令和过滤器
+  // Object.create(null) 创建新对象，设置对象的原型为null
   Vue.options = Object.create(null)
   // 组件、指令、过滤器
   ASSET_TYPES.forEach(type => {
@@ -76,9 +79,12 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   // this is used to identify the "base" constructor to extend all plain-object
   // components with in Weex's multi-instance scenarios.
+  // 记录当前vue的构造函数，留作后用
   Vue.options._base = Vue
 
   // 设置keep-alive组件
+  // extend方法：把内置组件的成员做浅拷贝，到Vue.options.components中
+  // builtInComponents就是keep-alive组件，从core/components/index中导出
   extend(Vue.options.components, builtInComponents)
   // 注册Vue。use(),用来注册插件
   initUse(Vue)

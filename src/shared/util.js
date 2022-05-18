@@ -54,6 +54,7 @@ export function toRawType (value: any): string {
 /**
  * Strict object type check. Only returns true
  * for plain JavaScript objects.
+ * 严格的对象类型检查
  */
 export function isPlainObject (obj: any): boolean {
   return _toString.call(obj) === '[object Object]'
@@ -227,6 +228,7 @@ export function toArray (list: any, start?: number): Array<any> {
 
 /**
  * Mix properties into target object.
+ * 复制源对象的属性和值到目标对象
  */
 export function extend (to: Object, _from: ?Object): Object {
   for (const key in _from) {
@@ -237,6 +239,7 @@ export function extend (to: Object, _from: ?Object): Object {
 
 /**
  * Merge an Array of Objects into a single Object.
+ * 将对象数组合并为一个单独的对象
  */
 export function toObject (arr: Array<any>): Object {
   const res = {}

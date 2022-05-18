@@ -16,11 +16,12 @@ let uid = 0
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
-    // a uid
+    // a uid 唯一标识
     vm._uid = uid++
 
+    // 开发环境下的性能检测
     let startTag, endTag
-    /* istanbul ignore if */
+    /* istanbul ignore if */ 
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
@@ -28,35 +29,56 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    // 不对Vue本身做响应式处理。为此设置标志
     vm._isVue = true
-    // merge options
+    // merge options 合并用户传入的options和构造函数中的options
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
+      // 若传入的options是组件
       initInternalComponent(vm, options)
     } else {
+      // 若传入的options是对象
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
         vm
       )
     }
+
+    // 设置渲染时的代理对象
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
+      // 开发环境
       initProxy(vm)
     } else {
+      // 设置渲染时的代理对象为Vue本身
       vm._renderProxy = vm
     }
     // expose real self
     vm._self = vm
+
+    /**
+     * 初始化Vue实例
+     */ 
+    
+    // 初始化跟生命周期相关的函数 $parent/$root/$children/$refs
     initLifecycle(vm)
+    // 初始化事件相关函数 
     initEvents(vm)
+    // $slots/$scopedSlots/$createElement/$attrs/$listeners
     initRender(vm)
+    // 触发beforeCreate钩子函数
     callHook(vm, 'beforeCreate')
+    // 实现依赖注入
     initInjections(vm) // resolve injections before data/props
+    // 初始化用户传入的options里面的所有属性
+    // 初始化 vm 的 _props,/methods/_data/computed/watch
     initState(vm)
     initProvide(vm) // resolve provide after data/props
+    
+    // 触发created钩子函数
     callHook(vm, 'created')
 
     /* istanbul ignore if */
@@ -67,6 +89,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     if (vm.$options.el) {
+      // 挂载整个页面
       vm.$mount(vm.$options.el)
     }
   }

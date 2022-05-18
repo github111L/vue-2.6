@@ -33,7 +33,7 @@ if (process.env.NODE_ENV !== 'production') {
       target
     )
   }
-
+  // 当前环境下是否有Proxy对象
   const hasProxy =
     typeof Proxy !== 'undefined' && isNative(Proxy)
 
@@ -82,8 +82,10 @@ if (process.env.NODE_ENV !== 'production') {
       const handlers = options.render && options.render._withStripped
         ? getHandler
         : hasHandler
+      // 初始化_renderProxy
       vm._renderProxy = new Proxy(vm, handlers)
     } else {
+      // 若不存在代理，把_renderProxy设置为Vue实例
       vm._renderProxy = vm
     }
   }

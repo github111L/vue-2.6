@@ -10,13 +10,16 @@ import {
 import { updateListeners } from '../vdom/helpers/index'
 
 export function initEvents (vm: Component) {
+  // 存储事件名称和对应的处理函数
   vm._events = Object.create(null)
   vm._hasHookEvent = false
   // init parent attached events
   const listeners = vm.$options._parentListeners
+  // 若父节点有事件监听函数，则更新组件的函数
   if (listeners) {
+    // 获取父组件的事件，将之添加到当前组件？？？
     updateComponentListeners(vm, listeners)
-  }
+  } 
 }
 
 let target: any
@@ -45,14 +48,15 @@ export function updateComponentListeners (
   oldListeners: ?Object
 ) {
   target = vm
-  updateListeners(listeners, oldListeners || {}, add, remove, createOnceHandler, vm)
   target = undefined
+  updateListeners(listeners, oldListeners || {}, add, remove, createOnceHandler, vm)
 }
 
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
     const vm: Component = this
+    // 可以给一个对象注册多个事件
     if (Array.isArray(event)) {
       for (let i = 0, l = event.length; i < l; i++) {
         vm.$on(event[i], fn)
