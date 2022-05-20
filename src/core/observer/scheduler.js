@@ -87,10 +87,14 @@ function flushSchedulerQueue () {
   // as we run existing watchers
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
+    // 渲染watcher
     if (watcher.before) {
+      // 渲染watcher才有的方法
+      // 更新之前，先触发beforeUpdate方法
       watcher.before()
     }
     id = watcher.id
+    // 保证数据变化后，对应的watcher还能正常运行 ？？？
     has[id] = null
     watcher.run()
     // in dev build, check and stop circular updates.
@@ -161,29 +165,41 @@ function callActivatedHooks (queue) {
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
  */
+// 目标watcher入队
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
   if (has[id] == null) {
+    // 标识该watcher对象未被处理
+    // 目的：防止watcher被重复处理
     has[id] = true
     if (!flushing) {
+      // 是否正在刷新 ，若flushing = true，标识当前队列正在被处理，即当前watcher正在被处理
+      // 若 flushing = false，当前队列没有被处理，则当前watcher直接进入队尾
       queue.push(watcher)
     } else {
+      // 如果正在处理queue
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
       let i = queue.length - 1
+      // index:queue中正在处理的watcher的index
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
+      // 按照watcher的id的顺序，把watcher插入队列
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
     if (!waiting) {
+      // 若当前队列没有被执行
       waiting = true
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {
+        // 若是开发环境，直接调用flushSchedulerQueue函数，开始处理
+        // 遍历队列中所有watcher，调用他们的run()方法
         flushSchedulerQueue()
         return
       }
+      // 生产环境，则延迟处理,实现Vue异步更新队列的功能
       nextTick(flushSchedulerQueue)
     }
   }

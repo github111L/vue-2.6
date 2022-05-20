@@ -21,6 +21,8 @@ export function isReserved (str: string): boolean {
 export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
   Object.defineProperty(obj, key, {
     value: val,
+    // 若不传，值为undefined,设置该属性为不可枚举的
+    // ！undefined = true, !!undefined = false
     enumerable: !!enumerable,
     writable: true,
     configurable: true

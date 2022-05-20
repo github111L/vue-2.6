@@ -57,10 +57,14 @@ export function initState (vm: Component) {
     initData(vm)
   } else {
     // 否则，将_data属性设置为空对象，并设置对象为响应式的数据
+    // true 表示是根对象
     observe(vm._data = {}, true /* asRootData */)
   }
+  // 创建 计算属性的watcher
   if (opts.computed) initComputed(vm, opts.computed)
   if (opts.watch && opts.watch !== nativeWatch) {
+    // 创建侦听器，用户watcher
+    // 定义watch对象时，一个属性对应的回调函数可以有多个，以数组的形式传递
     initWatch(vm, opts.watch)
   }
 }
@@ -118,6 +122,7 @@ function initProps (vm: Component, propsOptions: Object) {
 // 把data中的属性注入vue实例，并将之转换为响应式数据
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 在这里给_data属性赋值
   data = vm._data = typeof data === 'function'
     ? getData(data, vm) // 组件中的data是一个函数
     : data || {} // vue实例中的data是一个对象
@@ -130,6 +135,7 @@ function initData (vm: Component) {
     )
   }
   // proxy data on instance 获取data中的所有属性，判断是否和props，methods中的属性重名
+  // 检查data中的属性是否和props，methods中的属性重名
   const keys = Object.keys(data) 
   const props = vm.$options.props
   const methods = vm.$options.methods
@@ -196,6 +202,7 @@ function initComputed (vm: Component, computed: Object) {
         vm,
         getter || noop,
         noop,
+        // 常量，lazy为true
         computedWatcherOptions
       )
     }
@@ -306,6 +313,7 @@ function initMethods (vm: Component, methods: Object) {
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
+    // 若回调函数是个数组
     if (Array.isArray(handler)) {
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
@@ -318,17 +326,24 @@ function initWatch (vm: Component, watch: Object) {
 
 function createWatcher (
   vm: Component,
+  // 用户watcher，该选项为属性值，key，类型是string
   expOrFn: string | Function,
+  // 用户watcher。属性为回调函数handler、deep，immediate 的对象
   handler: any,
   options?: Object
 ) {
   if (isPlainObject(handler)) {
+    // 若被监听属性值对应的是个对象
     options = handler
+    // 属性变化后执行的回调函数
     handler = handler.handler
   }
   if (typeof handler === 'string') {
+    // 若回调函数只传递了函数名，则在vm实例上寻找相应方法（methods中定义的方法）
     handler = vm[handler]
   }
+  // 用 属性值，回调函数，属性值对应的对象 调用 $watch方法
+  // 需要监听的属性，回调函数，选项{immediate,deep等}
   return vm.$watch(expOrFn, handler, options)
 }
 
@@ -365,18 +380,28 @@ export function stateMixin (Vue: Class<Component>) {
   ): Function {
     const vm: Component = this
     if (isPlainObject(cb)) {
+      // 如果回调函数是对象，递归调用createWatcher
       return createWatcher(vm, expOrFn, cb, options)
     }
+    // 属性对应的选项，默认为空对象
     options = options || {}
+    // 表示该watcher 为用户watcher
     options.user = true
+    // 为侦听器需要跟踪的属性，创建watcher对象
+    // expOrFn 就是需要监听的属性名
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
+      // 若需要立即执行
       const info = `callback for immediate watcher "${watcher.expression}"`
+      // 收集依赖，当前watcher入栈
       pushTarget()
+      // 执行回调函数并做相应的错误处理
       invokeWithErrorHandling(cb, vm, [watcher.value], vm, info)
+      // 当前watcher处理完毕
       popTarget()
     }
     return function unwatchFn () {
+      // 销毁watcher 取消当前监听器
       watcher.teardown()
     }
   }

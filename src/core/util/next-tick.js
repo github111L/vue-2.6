@@ -11,9 +11,13 @@ const callbacks = []
 let pending = false
 
 function flushCallbacks () {
+  // 表示处理结束
   pending = false
+  // 将callbacks备份
   const copies = callbacks.slice(0)
+  // 清空callbacks
   callbacks.length = 0
+  // 遍历复制的callbacks数组，依次执行回调函数
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
   }
@@ -40,6 +44,14 @@ let timerFunc
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  // 优先使用Promise处理回调函数，微任务方式
+  // 微任务执行时，dom还没渲染到页面上，直接从dom树上获取数据
+  // 微任务是在本次同步任务执行完之后，才开始执行
+  /**
+   * 1. 数据改变之后会立即通知watcher执行更新，改变视图
+   * 2. watcher执行时会先更改dom树中的数据。在当前事件循环结束之后，才会将dom更新到页面上
+   * 3. nextTick回调函数(微任务)执行之前，dom树中的数据已经被改变，直接从dom树上获取数据
+   */
   const p = Promise.resolve()
   timerFunc = () => {
     p.then(flushCallbacks)
@@ -51,6 +63,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     if (isIOS) setTimeout(noop)
   }
   isUsingMicroTask = true
+  // 兼容IE 
 } else if (!isIE && typeof MutationObserver !== 'undefined' && (
   isNative(MutationObserver) ||
   // PhantomJS and iOS 7.x
@@ -60,6 +73,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
   let counter = 1
+  // mutationObserver 监听dom对象的改变，一旦有变，执行回调函数（以微任务形式执行）
   const observer = new MutationObserver(flushCallbacks)
   const textNode = document.createTextNode(String(counter))
   observer.observe(textNode, {
@@ -70,11 +84,13 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     textNode.data = String(counter)
   }
   isUsingMicroTask = true
+  // 浏览器不支持Promise，mutationObsever，则降级为setImmediate
 } else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
   // Fallback to setImmediate.
   // Technically it leverages the (macro) task queue,
   // but it is still a better choice than setTimeout.
   timerFunc = () => {
+    // setImmediate 总是比 setTimeout 先执行
     setImmediate(flushCallbacks)
   }
 } else {
@@ -83,9 +99,12 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     setTimeout(flushCallbacks, 0)
   }
 }
-
+// ctx 执行上下文，一般是Vue实例
 export function nextTick (cb?: Function, ctx?: Object) {
+  // 接收Promise传过来的resolve
   let _resolve
+  // 把cb加上异常处理，存入callbacks数组中
+  // 存储所有回调函数
   callbacks.push(() => {
     if (cb) {
       try {
@@ -98,11 +117,14 @@ export function nextTick (cb?: Function, ctx?: Object) {
     }
   })
   if (!pending) {
+    // 若队列未被处理，标记队列未处理状态，调用timerFuc函数
     pending = true
+    // 遍历callbacks数组，一次调用每一个回调函数
     timerFunc()
   }
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {
+    // 若cb不存在且有Promise实例，将该实例的resolve方法赋值给_resolve
     return new Promise(resolve => {
       _resolve = resolve
     })
